@@ -1,0 +1,3 @@
+# 忽略整个 CIFAR10_balanced 文件夹
+CIFAR10_balanced/
+CIFAR10_imbalanced/
