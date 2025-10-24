@@ -11,7 +11,22 @@ from 绘图小工具 import *
 import matplotlib
 matplotlib.use('TkAgg')  # 或者 'Qt5Agg'
 import matplotlib.pyplot as plt
+from ViT_PVT import *
+from ViT import *
+import json
 
+# 读取配置
+with open('config.json', 'r') as f:
+    config = json.load(f)
+
+# 使用配置
+mode = config['come']['mode']
+name = config['model']['name']
+hyper = config['hyper']
+hyper_converted = {
+    k: int(v) if isinstance(v, (int, float)) and k != 'dropout' else float(v) if k == 'dropout' else v
+    for k, v in hyper.items()
+}
 # 数据预处理
 def get_transforms():
     train_transform = transforms.Compose([
@@ -178,8 +193,7 @@ def save_checkpoint(model, optimizer, scheduler, epoch, acc, path):
         'accuracy': acc,
     }, path)
 
-mode = "new"
-# mode = "load"
+
 # 主训练函数
 def main():
     # 配置参数
@@ -193,17 +207,30 @@ def main():
 
     print(f"🎯 使用设备: {device}")
 
-    # 创建模型
-    model = Vit(
-        patch_size=8,
-        embed_dim=384,
-        num_heads=6,
-        max_seq_length=100,
-        encoder_num=6,
-        dropout=0.1,
-        num_classes=10
-    ).to(device)
+    if name == "ViT":
+        model = ViT(
+            patch_size=hyper_converted['patch_size'],
+            embed_dim=hyper_converted['embed_dim'],
+            num_heads=hyper_converted['num_heads'],
+            max_seq_length=hyper_converted['max_seq_length'],
+            encoder_num=hyper_converted['encoder_num'],
+            dropout=hyper_converted['dropout'],
+            num_classes=hyper_converted['num_classes']
+        ).to(device)
+    if name == "ViT_PVT":
+        model = ViT_PVT(
+            patch_size=hyper_converted['patch_size'],
+            embed_dim=hyper_converted['embed_dim'],
+            num_heads=hyper_converted['num_heads'],
+            max_seq_length=hyper_converted['max_seq_length'],
+            encoder_num=hyper_converted['encoder_num'],
+            dropout=hyper_converted['dropout'],
+            num_classes=hyper_converted['num_classes']
+        ).to(device)
 
+    if mode == "load":
+        checkpoint = torch.load('best_vit_model.pth')
+        model.load_state_dict(checkpoint['model_state_dict'])
     # 打印模型参数数量
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
