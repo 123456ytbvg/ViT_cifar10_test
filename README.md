@@ -53,7 +53,7 @@ cd d:\00_Course\03_DeepLearn\ViT_cifar10_test
 python ViT_train.py
 ```
 
-脚本默认配置（可在 `ViT_train.py` 中修改）：
+脚本默认配置（可在 `config.json` 中修改）：
 
 - batch_size = 32
 - epochs = 500
