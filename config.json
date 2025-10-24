@@ -1,0 +1,17 @@
+{
+  "come": {
+    "mode": "new"
+  },
+  "model": {
+    "name": "ViT_PVT"
+  },
+  "hyper": {
+        "patch_size":8,
+        "embed_dim":384,
+        "num_heads":6,
+        "max_seq_length":100,
+        "encoder_num":6,
+        "dropout":0.1,
+        "num_classes":10
+  }
+}
