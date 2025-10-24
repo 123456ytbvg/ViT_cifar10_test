@@ -197,12 +197,12 @@ def save_checkpoint(model, optimizer, scheduler, epoch, acc, path):
 # 主训练函数
 def main():
     # 配置参数
-    train_data_path = 'CIFAR10_imbalanced/CIFAR10_unbalance'
-    test_data_path = 'CIFAR10_balanced/CIFAR10_balance'
-    batch_size = 32
-    epochs = 500
-    learning_rate = 5e-5
-    weight_decay = 1e-4
+    train_data_path = hyper['train_data_path']
+    test_data_path = hyper['test_data_path']
+    batch_size = hyper['batch_size']
+    epochs =hyper['epochs']
+    learning_rate = hyper['learning_rate']
+    weight_decay = hyper['weight_decay']
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     print(f"🎯 使用设备: {device}")
@@ -318,10 +318,8 @@ def main():
             if use_web_plotter:
                 plotter.update(epoch, train_loss, val_loss, train_acc, val_acc)
 
-            # 计算准确率变化和喵喵消息
             delt = val_acc - best_acc
 
-            # 喵喵激励系统
             if delt < 0:
                 if delt < -0.003:
                     color_msg = "\033[91m气死我了喵 😠\033[0m"
