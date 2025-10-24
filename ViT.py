@@ -74,7 +74,7 @@ class Encoder(nn.Module):
 
         return out
 
-class Vit(nn.Module):
+class ViT(nn.Module):
     def __init__(self,patch_size=8,embed_dim=640,num_heads=8,max_seq_length = 70,
                  encoder_num = 12,dropout = 0.3,num_classes = 10):
         super().__init__()
