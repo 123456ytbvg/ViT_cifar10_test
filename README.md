@@ -5,6 +5,7 @@
 ## 项目结构
 
 - `ViT.py` — ViT 模型实现（包含位置嵌入、Encoder、分类头等）。
+- `config.json` — 模型和参数选择。
 - `ViT_train.py` — 训练主脚本：数据加载、训练/验证循环、学习率调度、模型保存、最终测试评估。
 - `绘图小工具.py` — 实时绘图工具 `TrainingPlotter`，使用 matplotlib 的 WebAgg 后端在浏览器中显示训练曲线，并保存图片。
 - `CIFAR10_balanced/` — 用于测试/验证的平衡 CIFAR10 子集（按类分文件夹）。
