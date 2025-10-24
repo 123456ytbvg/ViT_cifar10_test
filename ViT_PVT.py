@@ -105,8 +105,6 @@ class SRA(nn.Module):
         reduced_side_len = side_len // self.R
         seq_len_reduced = reduced_side_len * reduced_side_len
 
-        # 动态创建池化层
-        ave_pool = nn.AdaptiveAvgPool2d((reduced_side_len, reduced_side_len)).to(x.device)
         # QKV投影
         q_proj = self.W_q(x)  # [B, L, D]
         k_proj = self.W_k(x)  # [B, L, D]
@@ -117,8 +115,8 @@ class SRA(nn.Module):
         v_feat = v_proj[:, 1:, :].view(batch_size, side_len, side_len, self.D)
         k_feat = k_feat.permute(0, 3, 1, 2)  # [B, D, side_len, side_len]
         v_feat = v_feat.permute(0, 3, 1, 2)  # [B, D, side_len, side_len]
-        k_reduced = ave_pool(k_feat)
-        v_reduced = ave_pool(v_feat)
+        k_reduced = F.adaptive_avg_pool2d(k_feat, (reduced_side_len, reduced_side_len))
+        v_reduced = F.adaptive_avg_pool2d(v_feat, (reduced_side_len, reduced_side_len))
         k_reduced = k_reduced.permute(0, 2, 3, 1)  # [B, reduced_side_len, reduced_side_len, D]
         v_reduced = v_reduced.permute(0, 2, 3, 1)  # [B, reduced_side_len, reduced_side_len, D]
         k_proj = k_reduced.view(batch_size,seq_len_reduced,self.D)
@@ -197,7 +195,7 @@ class ViT_PVT(nn.Module):
         seq = self.embed_dropout(seq)
         for i in range(self.encoder_num):
             seq = self.encoders[i](seq)
-            if i % 3 == 0 and i > 0:
+            if i % 4 == 0 and i > 0:
                 batch_size, seq_len, embed_dim = seq.shape
                 cls_token = seq[:, :1, :]  # [B, 1, C]
                 img_tokens = seq[:, 1:, :]  # [B, L-1, C]
