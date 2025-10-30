@@ -74,7 +74,82 @@ class Encoder(nn.Module):
 
         return out
 
-class ViT(nn.Module):
+class SRA(nn.Module):
+    def __init__(self, embed_dim=640, D=640, H=8, expansion_ratio=4, R = 2):
+        super(SRA, self).__init__()
+        self.embed_dim = embed_dim
+        self.R = R
+        self.D = D
+        self.H = H
+        self.d = D // H
+
+        self.W_q = nn.Linear(embed_dim, D, bias=False)
+        self.W_k = nn.Linear(embed_dim, D, bias=False)
+        self.W_v = nn.Linear(embed_dim, D, bias=False)
+        self.W_out = nn.Linear(D, embed_dim, bias=False)
+
+
+        self.norm_attn = nn.LayerNorm(embed_dim)
+        self.norm_mlp = nn.LayerNorm(embed_dim)
+
+        self.linear1 = nn.Linear(embed_dim, embed_dim * expansion_ratio)
+        self.linear2 = nn.Linear(embed_dim * expansion_ratio, embed_dim)
+
+        self.dropout = nn.Dropout(0.1)
+
+    def forward(self, x):
+        batch_size, seq_len, embed_dim = x.shape
+
+        residual = x
+        side_len = int(math.sqrt(seq_len-1))
+        reduced_side_len = side_len // self.R
+        seq_len_reduced = reduced_side_len * reduced_side_len
+
+        # QKV投影
+        q_proj = self.W_q(x)  # [B, L, D]
+        k_proj = self.W_k(x)  # [B, L, D]
+        v_proj = self.W_v(x)  # [B, L, D]
+
+        q = q_proj.view(batch_size, seq_len, self.H, self.d).transpose(1, 2)  # [B, H, L, d]
+        k_feat = k_proj[:,1:,:].view(batch_size,side_len,side_len,self.D)
+        v_feat = v_proj[:, 1:, :].view(batch_size, side_len, side_len, self.D)
+        k_feat = k_feat.permute(0, 3, 1, 2)  # [B, D, side_len, side_len]
+        v_feat = v_feat.permute(0, 3, 1, 2)  # [B, D, side_len, side_len]
+        k_reduced = F.adaptive_avg_pool2d(k_feat, (reduced_side_len, reduced_side_len))
+        v_reduced = F.adaptive_avg_pool2d(v_feat, (reduced_side_len, reduced_side_len))
+        k_reduced = k_reduced.permute(0, 2, 3, 1)  # [B, reduced_side_len, reduced_side_len, D]
+        v_reduced = v_reduced.permute(0, 2, 3, 1)  # [B, reduced_side_len, reduced_side_len, D]
+        k_proj = k_reduced.view(batch_size,seq_len_reduced,self.D)
+        v_proj = v_reduced.view(batch_size, seq_len_reduced, self.D)
+        k = k_proj.view(batch_size, seq_len_reduced, self.H, self.d).transpose(1, 2)  # [B, H, L/R^2, d]
+        v = v_proj.view(batch_size, seq_len_reduced, self.H, self.d).transpose(1, 2)  # [B, H, L/R^2, d]
+
+        # 注意力计算
+        attn_scores = q @ k.transpose(-2, -1) / math.sqrt(self.d)  # [B, H, L, L]
+        attn_weights = torch.softmax(attn_scores, dim=-1)
+        attn_weights = self.dropout(attn_weights)
+
+        out = attn_weights @ v  # [B, H, L, d]
+        out = out.transpose(1, 2).contiguous().view(batch_size, seq_len, self.D)  # [B, L, D]
+        out = self.W_out(out)
+        out = self.dropout(out)
+
+        # 残差连接和层归一化
+        out = residual + out
+        out = self.norm_attn(out)
+
+        # MLP部分
+        residual_mlp = out
+        out = self.linear1(out)
+        out = F.gelu(out)
+        out = self.dropout(out)
+        out = self.linear2(out)
+        out = self.dropout(out)
+        out = residual_mlp + out
+        out = self.norm_mlp(out)
+
+        return out
+class ViT_PVT(nn.Module):
     def __init__(self,patch_size=8,embed_dim=640,num_heads=8,max_seq_length = 70,
                  encoder_num = 12,dropout = 0.3,num_classes = 10):
         super().__init__()
@@ -93,7 +168,7 @@ class ViT(nn.Module):
         self.encoder_num = encoder_num
         self.encoders = nn.ModuleList(
             [
-                Encoder(embed_dim=embed_dim,D=embed_dim) for _ in range(encoder_num)
+                SRA(embed_dim=embed_dim,D=embed_dim) for _ in range(encoder_num)
             ]
         )
         self.head = nn.Sequential(
@@ -120,6 +195,21 @@ class ViT(nn.Module):
         seq = self.embed_dropout(seq)
         for i in range(self.encoder_num):
             seq = self.encoders[i](seq)
+            if i % 4 == 0 and i > 0:
+                batch_size, seq_len, embed_dim = seq.shape
+                cls_token = seq[:, :1, :]  # [B, 1, C]
+                img_tokens = seq[:, 1:, :]  # [B, L-1, C]
+                current_side_len = int(math.sqrt(seq_len - 1))
+                target_side_len = current_side_len // 2  # 缩短为原来的一半
+                img_feature_map = img_tokens.view(batch_size, current_side_len, current_side_len, embed_dim)
+                img_feature_map_down = F.adaptive_avg_pool2d(
+                    img_feature_map.permute(0, 3, 1, 2),  # [B, C, H, W]
+                    (target_side_len, target_side_len)
+                )  # [B, C, H/2, W/2]
+                img_tokens_down = img_feature_map_down.permute(0, 2, 3, 1)  # [B, H/2, W/2, C]
+                img_tokens_down = img_tokens_down.reshape(batch_size, -1, embed_dim)  # [B, L_new, C]
+                seq = torch.cat([cls_token, img_tokens_down], dim=1)
+
         # 分类准备
         cls_output = seq[:, 0]
         out = self.head(cls_output)
@@ -130,3 +220,5 @@ class ViT(nn.Module):
             out = self.forward(image)
             out_p = F.softmax(out,dim=1)
         return torch.argmax(out_p, dim=1),out_p
+
+

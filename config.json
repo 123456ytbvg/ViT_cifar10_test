@@ -1,0 +1,23 @@
+{
+  "come": {
+    "mode": "new"
+  },
+  "model": {
+    "name": "ViT_PVT"
+  },
+  "hyper": {
+        "train_data_path":"CIFAR10_imbalanced/CIFAR10_unbalance",
+        "test_data_path":"CIFAR10_balanced/CIFAR10_balance",
+        "batch_size":32,
+        "epochs":500,
+        "learning_rate":5e-5,
+        "weight_decay":1e-4,
+        "patch_size":8,
+        "embed_dim":384,
+        "num_heads":6,
+        "max_seq_length":100,
+        "encoder_num":6,
+        "dropout":0.1,
+        "num_classes":10
+  }
+}
