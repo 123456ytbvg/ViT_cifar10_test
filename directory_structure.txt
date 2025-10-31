@@ -1,0 +1,71 @@
+卷 Data 的文件夹 PATH 列表
+卷序列号为 1E0C-FCFC
+D:.
+│  .gitignore
+│  best_vit_model.pth
+│  best_vit_model_quantized.pth
+│  config.json
+│  directory_structure.txt
+│  quantize_model.py
+│  README.md
+│  ViT.py
+│  ViT_PVT.py
+│  ViT_train.py
+│  实验报告.md
+│  模型参数量和FLOPs.py
+│  绘图小工具.py
+│  
+├─CIFAR10_balanced
+│  └─CIFAR10_balance
+│      ├─0
+│      │      
+│      ├─1
+│      │      
+│      ├─2
+│      │      
+│      ├─3
+│      │      
+│      ├─4
+│      │      
+│      ├─5
+│      │      
+│      ├─6
+│      │      
+│      ├─7
+│      │      
+│      ├─8
+│      │      
+│      └─9
+│              
+├─CIFAR10_imbalanced
+│  └─CIFAR10_unbalance
+│      ├─0
+│      │      
+│      ├─1
+│      │      
+│      ├─2
+│      │      
+│      ├─3
+│      │      
+│      ├─4
+│      │      
+│      ├─5
+│      │      
+│      ├─6
+│      │      
+│      ├─7
+│      │      
+│      ├─8
+│      │      
+│      └─9
+│              
+├─training_plots
+│      
+└─__pycache__
+        quantize_dynamic.cpython-310.pyc
+        quantize_static.cpython-310.pyc
+        ViT.cpython-310.pyc
+        ViT.cpython-39.pyc
+        ViT_train.cpython-310.pyc
+        绘图小工具.cpython-310.pyc
+        
