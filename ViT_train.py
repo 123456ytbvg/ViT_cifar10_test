@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from ViT_PVT import *
 from ViT import *
 import json
-
+from AViT import *
 # 读取配置
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -227,7 +227,16 @@ def main():
             dropout=hyper_converted['dropout'],
             num_classes=hyper_converted['num_classes']
         ).to(device)
-
+    if name == "AViT":
+        model = AViT(
+            patch_size=hyper_converted['patch_size'],
+            embed_dim=hyper_converted['embed_dim'],
+            num_heads=hyper_converted['num_heads'],
+            max_seq_length=hyper_converted['max_seq_length'],
+            encoder_num=hyper_converted['encoder_num'],
+            dropout=hyper_converted['dropout'],
+            num_classes=hyper_converted['num_classes']
+        ).to(device)
     if mode == "load":
         checkpoint = torch.load('best_vit_model.pth')
         model.load_state_dict(checkpoint['model_state_dict'])
