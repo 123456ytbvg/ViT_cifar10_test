@@ -5,6 +5,8 @@
 ## 项目结构
 
 - `ViT.py` — ViT 模型实现（包含位置嵌入、Encoder、分类头等）。
+- `ViT_PVT.py` — PVT（池化金字塔） 模型实现
+- `AViT.py` — AViT 模型实现
 - `config.json` — 模型和参数选择。
 - `ViT_train.py` — 训练主脚本：数据加载、训练/验证循环、学习率调度、模型保存、最终测试评估。
 - `绘图小工具.py` — 实时绘图工具 `TrainingPlotter`，使用 matplotlib 的 WebAgg 后端在浏览器中显示训练曲线，并保存图片。
@@ -60,7 +62,7 @@ python ViT_train.py
 - learning_rate = 5e-5
 - weight_decay = 1e-4
 - model: Vit(patch_size=8, embed_dim=384, num_heads=6, encoder_num=6, num_classes=10)
-
+模型选择等
 训练过程中会显示进度条与终端日志，并尝试启动 `TrainingPlotter`（使用 matplotlib 的 WebAgg 或 TkAgg 后端）。如果成功，浏览器会在本地打开实时曲线（常见地址为 http://localhost:8987）。
 
 ## 可视化
