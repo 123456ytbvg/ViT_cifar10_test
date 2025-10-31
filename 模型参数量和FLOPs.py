@@ -16,6 +16,7 @@ def calculate_model_complexity(model, input_size=(1, 3, 32, 32)):
 
 from ViT import *
 from ViT_PVT import *
+from AViT import *
 if __name__ == "__main__":
     with open('config.json', 'r') as f:
         config = json.load(f)
@@ -48,7 +49,16 @@ if __name__ == "__main__":
             dropout=hyper_converted['dropout'],
             num_classes=hyper_converted['num_classes']
         )
-
+    if name == "AViT":
+        model = AViT(
+            patch_size=hyper_converted['patch_size'],
+            embed_dim=hyper_converted['embed_dim'],
+            num_heads=hyper_converted['num_heads'],
+            max_seq_length=hyper_converted['max_seq_length'],
+            encoder_num=hyper_converted['encoder_num'],
+            dropout=hyper_converted['dropout'],
+            num_classes=hyper_converted['num_classes']
+        )
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
     calculate_model_complexity(model)
